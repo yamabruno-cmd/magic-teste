@@ -5,69 +5,109 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Minha coleção de Magic</title>
 <style>
-:root{--bg:#14161c;--card:#1f2330;--txt:#e8e8ec;--mut:#8b90a0;--acc:#c9a227;--line:#2c3142}
+:root{--bg:#0f1117;--panel:#171a24;--card:#1e2230;--line:#2a2f3f;--txt:#eceef4;--mut:#8a90a2;--acc:#c9a227;--acc2:#e6c451}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt)}
-header{padding:14px 18px;border-bottom:1px solid var(--line)}
-h1{font-size:19px;margin:0 0 10px}
-.linha{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-input,select,button{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px}
-input[type=text]{min-width:160px}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt)}
+button,input,select{font:inherit}
+input,select{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
+input:focus,select:focus{border-color:var(--acc)}
 button{cursor:pointer}
-button.pri{background:var(--acc);color:#111;border:none;font-weight:600}
-.filtros{padding:10px 18px}
-.stats{display:flex;gap:16px;padding:0 18px 10px;color:var(--mut);font-size:14px;flex-wrap:wrap}
-.stats b{color:var(--txt)}
-#msg{padding:0 18px 8px;color:var(--mut);font-size:13px;min-height:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:0 18px 40px}
-.c{background:var(--card);border-radius:10px;overflow:hidden;border:1px solid var(--line);position:relative}
+.pri{background:var(--acc);color:#111;border:none;border-radius:10px;padding:9px 16px;font-weight:600;font-size:14px}
+.pri:hover{background:var(--acc2)}
+.pri:disabled{opacity:.6;cursor:default}
+
+/* barra superior */
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--acc),#8a5cff);display:grid;place-items:center;color:#111;font-weight:800;font-size:18px}
+.brand h1{font-size:18px;margin:0;letter-spacing:.2px}
+.brand small{color:var(--mut);font-size:12px}
+.acoes{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cambio{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:13px}
+.cambio input{width:72px;text-align:center}
+
+/* filtros */
+.toolbar{padding:18px 24px 6px;display:grid;gap:14px}
+.linha{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.busca{flex:1;min-width:240px}
+.busca input{width:100%}
+.grupo{display:flex;flex-direction:column;gap:6px}
+.rotulo{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);color:#111;font-weight:700;font-size:12px;display:grid;place-items:center;padding:0}
+.chip.ativo{outline:2px solid var(--acc);outline-offset:2px}
+.chip.todas{background:var(--card);color:var(--txt);font-size:11px}
+
+/* resumo */
+.metricas{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;padding:12px 24px 4px}
+.metrica{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.metrica span{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+.metrica b{display:block;font-size:22px;margin-top:6px;font-weight:700}
+.metrica.destaque b{color:var(--acc2)}
+.aviso{padding:6px 24px 0;color:#e5a13b;font-size:13px}
+#msg{padding:8px 24px 0;color:var(--mut);font-size:13px;min-height:20px}
+
+/* grade */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:14px 24px 48px}
+.c{background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative;transition:transform .15s,border-color .15s}
+.c:hover{transform:translateY(-2px);border-color:#3a4158}
 .c img{width:100%;display:block;aspect-ratio:488/680;object-fit:cover;background:#000}
 .ph{aspect-ratio:488/680;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:12px;background:#000}
-.info{padding:7px 9px;font-size:12px}
+.info{padding:9px 10px;font-size:12px}
 .pt{font-weight:600;line-height:1.25}
 .en{color:var(--mut);font-size:11px;margin-top:2px}
-.meta{color:var(--mut);font-size:11px;margin-top:5px;line-height:1.5}
-.preco{margin-top:5px;font-weight:600;color:var(--acc)}
-.badge{position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#f5d76e,#c48bff,#6ee7f9);color:#111;font-size:10px;font-weight:700;padding:2px 5px;border-radius:5px}
-.qtd{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.75);font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px}
+.meta{color:var(--mut);font-size:11px;margin-top:6px;line-height:1.5}
+.preco{margin-top:6px;font-weight:700;color:var(--acc2)}
+.badge{position:absolute;top:8px;right:8px;background:linear-gradient(135deg,#f5d76e,#c48bff,#6ee7f9);color:#111;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px}
+.qtd{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.75);font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;border:1px solid #0008;vertical-align:middle}
-.mais{grid-column:1/-1;justify-self:center}
+.mais{grid-column:1/-1;justify-self:center;padding:10px 22px}
 </style>
 </head>
 <body>
-<header>
-  <h1>Minha coleção de Magic</h1>
-  <div class="linha">
-    <label>USD → BRL: <input type="text" id="cambio" value="5.50" style="width:70px"></label>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">M</div>
+    <div><h1>Coleção Magic</h1><small>Estoque Yamamoto</small></div>
+  </div>
+  <div class="acoes">
+    <label class="cambio">USD → BRL <input type="text" id="cambio" value="5.50"></label>
     <button id="btnPrecos" class="pri">Atualizar preços</button>
   </div>
 </header>
 
-<div class="filtros linha">
-  <input type="text" id="busca" placeholder="Buscar nome (PT ou EN)">
-  <select id="cor">
-    <option value="">Todas as cores</option>
-    <option value="W">Branco</option><option value="U">Azul</option>
-    <option value="B">Preto</option><option value="R">Vermelho</option>
-    <option value="G">Verde</option><option value="M">Multicolor</option>
-    <option value="C">Incolor</option>
-  </select>
-  <select id="acab">
-    <option value="">Normal e foil</option>
-    <option value="normal">Só normal</option>
-    <option value="foil">Só foil</option>
-  </select>
-  <select id="ed"><option value="">Todas as edições</option></select>
-  <select id="ordem">
-    <option value="pt">Nome (PT)</option>
-    <option value="en">Nome (EN)</option>
-    <option value="pago">Menor preço pago (unid.)</option>
-    <option value="preco">Menor preço de mercado (unid.)</option>
-    <option value="valor">Maior valor de mercado (total)</option>
-  </select>
-</div>
+<section class="toolbar">
+  <div class="linha">
+    <div class="busca"><input type="text" id="busca" placeholder="Buscar por nome em português ou inglês"></div>
+    <div class="grupo"><span class="rotulo">Edição</span>
+      <select id="ed"><option value="">Todas</option></select></div>
+    <div class="grupo"><span class="rotulo">Ordenar por</span>
+      <select id="ordem">
+        <option value="pt">Nome (PT)</option>
+        <option value="en">Nome (EN)</option>
+        <option value="pago">Menor preço pago</option>
+        <option value="preco">Menor preço de mercado</option>
+        <option value="valor">Maior valor total</option>
+      </select></div>
+  </div>
+  <div class="linha">
+    <div class="grupo"><span class="rotulo">Cor</span>
+      <div class="chips" id="chips">
+        <button class="chip todas ativo" data-v="">Todas</button>
+        <button class="chip" data-v="W" style="background:#f8f6d8">W</button>
+        <button class="chip" data-v="U" style="background:#4fa3e0">U</button>
+        <button class="chip" data-v="B" style="background:#6b6b6b;color:#fff">B</button>
+        <button class="chip" data-v="R" style="background:#e5573b;color:#fff">R</button>
+        <button class="chip" data-v="G" style="background:#3fa35b;color:#fff">G</button>
+        <button class="chip" data-v="M" style="background:linear-gradient(135deg,#f8f6d8,#4fa3e0,#e5573b,#3fa35b)">M</button>
+        <button class="chip" data-v="C" style="background:#aaa">C</button>
+      </div></div>
+  </div>
+  <input type="hidden" id="cor" value="">
+</section>
 
-<div class="stats" id="stats"></div>
+<section class="metricas" id="stats"></section>
+<div class="aviso" id="aviso"></div>
 <div id="msg"></div>
 <div class="grid" id="grid"></div>
 
@@ -184,12 +224,10 @@ function precoBRL(c){
 /* ---------- Filtros e exibição ---------- */
 function filtrados(){
   const b=$('busca').value.trim().toLowerCase();
-  const cor=$('cor').value, acab=$('acab').value, ed=$('ed').value;
+  const cor=$('cor').value, ed=$('ed').value;
   const l=cartas.filter(c=>{
     if(b&&!(c.pt+' '+c.en).toLowerCase().includes(b)) return false;
     if(ed&&c.edicao!==ed) return false;
-    if(acab==='foil'&&!isFoil(c)) return false;
-    if(acab==='normal'&&isFoil(c)) return false;
     if(cor){
       if(!c.scry) return false;           // ainda sem dados da Scryfall
       const cs=coresDe(c);
@@ -244,10 +282,14 @@ function render(reset){
   const pago=l.reduce((s,c)=>s+c.pago*c.qtd,0);
   const semDados=cartas.filter(c=>!c.scry).length;
   const aviso=$('cor').value&&semDados
-    ?`<span style="color:#e5a13b">Filtro de cor: ${semDados} cartas sem dados. Clique em "Atualizar preços".</span>`:'';
-  $('stats').innerHTML=`<span>Cartas: <b>${qtd}</b></span>
-    <span>Valor de mercado: <b>${brl(mercado)}</b></span>
-    <span>Total pago: <b>${brl(pago)}</b></span>${aviso}`;
+    ?`Filtro de cor: ${semDados} cartas sem dados. Clique em "Atualizar preços".`:'';
+  const diff=mercado-pago;
+  $('stats').innerHTML=`
+    <div class="metrica"><span>Cartas</span><b>${qtd}</b></div>
+    <div class="metrica"><span>Valor de mercado</span><b>${brl(mercado)}</b></div>
+    <div class="metrica"><span>Total pago</span><b>${brl(pago)}</b></div>
+    <div class="metrica destaque"><span>Diferença</span><b>${diff>=0?'+':''}${brl(diff)}</b></div>`;
+  $('aviso').innerHTML=aviso;
   const botao=l.length>limite?`<button class="pri mais" id="mais">Mostrar mais (${l.length-limite} restantes)</button>`:'';
   $('grid').innerHTML=l.slice(0,limite).map(cartaHTML).join('')+botao;
 }
@@ -276,11 +318,19 @@ $('grid').addEventListener('error',e=>{
   img.replaceWith(div);
 },true);
 
+// chips de cor e botões de acabamento
+function escolherBotao(grupoId,inputId,v){
+  $(inputId).value=v;
+  document.querySelectorAll(`#${grupoId} button`).forEach(b=>b.classList.toggle('ativo',b.dataset.v===v));
+  $(inputId).dispatchEvent(new Event('change'));
+}
+$('chips').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) escolherBotao('chips','cor',b.dataset.v); });
+
 $('btnPrecos').addEventListener('click',atualizarPrecos);
 $('grid').addEventListener('click',e=>{
   if(e.target.id==='mais'){ limite+=PAGINA; render(false); }
 });
-['busca','cor','acab','ed','ordem','cambio'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>render(true))));
+['busca','cor','ed','ordem','cambio'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>render(true))));
 </script>
 </body>
 </html>
