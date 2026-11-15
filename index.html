@@ -71,6 +71,19 @@ button{cursor:pointer}
 .qtd{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.75);font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;border:1px solid #0008;vertical-align:middle}
 .mais{grid-column:1/-1;justify-self:center;padding:10px 22px}
+[hidden]{display:none!important}
+.abas{display:flex;gap:4px;padding:8px 24px 0;border-bottom:1px solid var(--line);background:var(--bg)}
+.aba{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:10px 14px;font-size:14px;border-radius:0}
+.aba.ativo{color:var(--txt);border-bottom-color:var(--acc)}
+.hist{padding:18px 24px 48px;display:grid;gap:14px}
+.hist-controles{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.hist-controles select{min-width:320px}
+#histResumo{padding:0}
+.grafico{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.grafico svg{display:block;height:auto}
+.legenda{display:flex;gap:16px;color:var(--mut);font-size:12px;margin-top:8px}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.aviso-h{color:var(--mut);font-size:13px;margin:0}
 </style>
 </head>
 <body>
@@ -95,6 +108,12 @@ button{cursor:pointer}
 
 </header>
 
+<nav class="abas">
+  <button class="aba ativo" data-aba="colecao">Coleção</button>
+  <button class="aba" data-aba="historico">Histórico de preço</button>
+</nav>
+
+<main id="aba-colecao">
 <section class="toolbar">
   <div class="linha acima">
     <div class="acoes-filtro">
@@ -135,6 +154,16 @@ button{cursor:pointer}
         <option value="vintage">Vintage</option>
         <option value="pioneer">Pioneer</option>
       </select></div>
+    <div class="grupo"><span class="rotulo">Raridade</span>
+      <select id="raridade">
+        <option value="">Todas</option>
+        <option value="common">Comum</option>
+        <option value="uncommon">Incomum</option>
+        <option value="rare">Rara</option>
+        <option value="mythic">Mítica</option>
+        <option value="special">Especial</option>
+        <option value="bonus">Bônus</option>
+      </select></div>
   </div>
   <input type="hidden" id="cor" value="">
 </section>
@@ -143,6 +172,17 @@ button{cursor:pointer}
 <div class="aviso" id="aviso"></div>
 <div id="msg"></div>
 <div class="grid" id="grid"></div>
+</main>
+
+<section id="aba-historico" class="hist" hidden>
+  <div class="hist-controles">
+    <div class="grupo"><span class="rotulo">Carta</span>
+      <select id="histCarta"></select></div>
+  </div>
+  <div class="metricas" id="histResumo"></div>
+  <div class="grafico" id="histGrafico"></div>
+  <p class="aviso-h" id="histMsg"></p>
+</section>
 
 <script>
 // Coleção embutida (exportada da planilha)
@@ -197,7 +237,7 @@ async function buscarCarta(c){
   for(const u of urls){
     try{
       const r=await fetch(u,{headers:{'Accept':'application/json'}});
-      if(r.ok){ const d=await r.json(); return {prices:d.prices||{},colors:d.colors||d.card_faces?.[0]?.colors||[],tipo:d.type_line||d.card_faces?.[0]?.type_line||'',legal:d.legalities||{}}; }
+      if(r.ok){ const d=await r.json(); return {prices:d.prices||{},colors:d.colors||d.card_faces?.[0]?.colors||[],tipo:d.type_line||d.card_faces?.[0]?.type_line||'',legal:d.legalities||{},raridade:d.rarity||''}; }
     }catch(e){ /* tenta a próxima */ }
   }
   return null;
@@ -216,6 +256,7 @@ async function atualizarPrecos(){
       if(i%25===24) render(false);
     }
     salvarCache();
+    registrarHistorico();
     render(false);
     $('msg').textContent=ok
       ?`Preços atualizados em ${agora()} (${ok} de ${cartas.length} cartas encontradas).`
@@ -257,7 +298,7 @@ function precoBRL(c){
 /* ---------- Filtros e exibição ---------- */
 function filtrados(){
   const b=$('busca').value.trim().toLowerCase();
-  const cor=$('cor').value, ed=$('ed').value, tipo=$('tipo').value, formato=$('formato').value;
+  const cor=$('cor').value, ed=$('ed').value, tipo=$('tipo').value, formato=$('formato').value, raridade=$('raridade').value;
   const l=cartas.filter(c=>{
     if(b&&!(c.pt+' '+c.en).toLowerCase().includes(b)) return false;
     if(ed&&c.edicao!==ed) return false;
@@ -271,6 +312,10 @@ function filtrados(){
     if(tipo){
       if(!c.scry) return false;
       if(!(c.scry.tipo||'').includes(tipo)) return false;
+    }
+    if(raridade){
+      if(!c.scry) return false;
+      if(c.scry.raridade!==raridade) return false;
     }
     if(formato){
       if(!c.scry) return false;
@@ -322,7 +367,7 @@ function render(reset){
   const mercado=l.reduce((s,c)=>s+(precoBRL(c)||0)*c.qtd,0);
   const pago=l.reduce((s,c)=>s+c.pago*c.qtd,0);
   const semDados=cartas.filter(c=>!c.scry).length;
-  const usandoFiltroAtualizavel=$('cor').value||$('tipo').value||$('formato').value;
+  const usandoFiltroAtualizavel=$('cor').value||$('tipo').value||$('formato').value||$('raridade').value;
   const aviso=usandoFiltroAtualizavel&&semDados
     ?`Filtros de cor, tipo ou formato: ${semDados} cartas sem dados. Clique em "Atualizar preços".`:'';
   const diff=mercado-pago;
@@ -345,19 +390,112 @@ function preencherEdicoes(){
 function agrupar(lista){
   const m=new Map();
   for(const c of lista){
-    const k=[c.sigla,c.num,c.en,c.idioma,c.acab,c.variante].join('|');
-    if(!m.has(k)) m.set(k,{...c,qtd:0,custo:0,condicoes:{}});
+    const k=[c.sigla,c.num,c.en,c.acab,c.variante].join('|');
+    if(!m.has(k)) m.set(k,{...c,qtd:0,custo:0,condicoes:{},idiomas:{}});
     const g=m.get(k);
     g.qtd+=c.qtd;
     g.custo+=c.pago*c.qtd;
     g.condicoes[c.qual]=(g.condicoes[c.qual]||0)+c.qtd;
+    g.idiomas[c.idioma]=(g.idiomas[c.idioma]||0)+c.qtd;
   }
+  const junta=o=>Object.entries(o).map(([q,n])=>n>1?`${q} ×${n}`:q).join(' · ');
   return [...m.values()].map(g=>({
     ...g,
     pago:g.qtd?g.custo/g.qtd:0,   // preço médio por unidade
-    qual:Object.entries(g.condicoes).map(([q,n])=>n>1?`${q} ×${n}`:q).join(' · ')
+    qual:junta(g.condicoes),
+    idioma:junta(g.idiomas)
   }));
 }
+
+/* ---------- Histórico de preço (guardado no navegador) ---------- */
+const CHAVE_HIST='mtg-historico';
+const dt=d=>new Date(d+'T12:00:00').getTime();
+const lerHistorico=()=>{ try{return JSON.parse(localStorage.getItem(CHAVE_HIST)||'{}');}catch(e){return {};} };
+
+// grava um ponto por carta por dia (atualizações no mesmo dia substituem o ponto)
+function registrarHistorico(){
+  const hoje=new Date().toISOString().slice(0,10);
+  const h=lerHistorico(), cb=cambio();
+  for(const c of cartas){
+    if(!c.scry) continue;
+    const p=c.scry.prices||{};
+    const usd=parseFloat(p.usd), foil=parseFloat(p.usd_foil);
+    if(isNaN(usd)&&isNaN(foil)) continue;
+    const k=chave(c), lista=h[k]||[];
+    const ponto={d:hoje,usd:isNaN(usd)?null:usd,foil:isNaN(foil)?null:foil,cambio:cb};
+    const i=lista.findIndex(x=>x.d===hoje);
+    if(i>=0) lista[i]=ponto; else lista.push(ponto);
+    h[k]=lista;
+  }
+  localStorage.setItem(CHAVE_HIST,JSON.stringify(h));
+}
+
+function mostrarAba(nome){
+  document.querySelectorAll('.aba').forEach(b=>b.classList.toggle('ativo',b.dataset.aba===nome));
+  $('aba-colecao').hidden=nome!=='colecao';
+  $('aba-historico').hidden=nome!=='historico';
+  if(nome==='historico') renderHistorico();
+}
+
+function opcoesHistorico(){
+  const sel=$('histCarta'), atual=sel.value;
+  const lista=[...cartas].sort((a,b)=>a.pt.localeCompare(b.pt,'pt'));
+  sel.innerHTML=lista.map(c=>`<option value="${esc(chave(c))}">${esc(c.pt)} · ${esc(c.edicao)}</option>`).join('');
+  if(atual&&lista.some(c=>chave(c)===atual)) sel.value=atual;
+}
+
+function grafico(pontos){
+  if(!pontos.length) return '<p class="aviso-h">Ainda não há registros para esta carta. Clique em "Atualizar preços" para começar.</p>';
+  const W=800,H=300,pad={l:64,r:20,t:20,b:36};
+  const t0=Math.min(...pontos.map(p=>dt(p.d))), t1=Math.max(...pontos.map(p=>dt(p.d)));
+  const valores=pontos.flatMap(p=>[p.usd!=null?p.usd*p.cambio:null,p.foil!=null?p.foil*p.cambio:null]).filter(v=>v!=null);
+  const vmax=(Math.max(...valores)*1.1)||1;
+  const x=t=>pad.l+(t1===t0?(W-pad.l-pad.r)/2:(t-t0)/(t1-t0)*(W-pad.l-pad.r));
+  const y=v=>H-pad.b-(v/vmax)*(H-pad.t-pad.b);
+  const linha=(campo,cor)=>{
+    const pts=pontos.filter(p=>p[campo]!=null).map(p=>[x(dt(p.d)),y(p[campo]*p.cambio)]);
+    if(!pts.length) return '';
+    const d=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+    return `<path d="${d}" fill="none" stroke="${cor}" stroke-width="2.5"/>`+
+      pts.map(q=>`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="4" fill="${cor}"/>`).join('');
+  };
+  const eixo=[0,1,2,3,4].map(i=>{
+    const v=vmax*i/4;
+    return `<line x1="${pad.l}" x2="${W-pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2f3f"/>`+
+      `<text x="${pad.l-8}" y="${y(v)+4}" text-anchor="end" fill="#8a90a2" font-size="11">${brl(v)}</text>`;
+  }).join('');
+  const fmt=t=>new Date(t).toLocaleDateString('pt-BR');
+  const datas=`<text x="${pad.l}" y="${H-10}" fill="#8a90a2" font-size="11">${fmt(t0)}</text>`+
+    `<text x="${W-pad.r}" y="${H-10}" text-anchor="end" fill="#8a90a2" font-size="11">${fmt(t1)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img">${eixo}${linha('usd','#c9a227')}${linha('foil','#c48bff')}${datas}</svg>
+    <div class="legenda"><span><i style="background:#c9a227"></i>Normal</span><span><i style="background:#c48bff"></i>Foil</span></div>`;
+}
+
+function renderHistorico(){
+  opcoesHistorico();
+  const k=$('histCarta').value;
+  const pts=(lerHistorico()[k]||[]).slice().sort((a,b)=>a.d.localeCompare(b.d));
+  $('histGrafico').innerHTML=grafico(pts);
+  if(!pts.length){
+    $('histResumo').innerHTML='';
+    $('histMsg').textContent='';
+    return;
+  }
+  const primeiro=pts[0], ultimo=pts[pts.length-1];
+  const valor=(p,campo)=>p[campo]!=null?p[campo]*p.cambio:null;
+  const var_=primeiro.usd&&ultimo.usd?(ultimo.usd-primeiro.usd)/primeiro.usd*100:null;
+  $('histResumo').innerHTML=`
+    <div class="metrica"><span>Preço atual (normal)</span><b>${brl(valor(ultimo,'usd'))}</b></div>
+    <div class="metrica"><span>Preço atual (foil)</span><b>${brl(valor(ultimo,'foil'))}</b></div>
+    <div class="metrica destaque"><span>Variação desde o início</span><b>${var_==null?'—':(var_>=0?'+':'')+var_.toFixed(1).replace('.',',')+'%'}</b></div>
+    <div class="metrica"><span>Registros</span><b>${pts.length}</b></div>`;
+  $('histMsg').textContent=pts.length<2
+    ?'Só há um registro por enquanto. A variação aparece depois de uma atualização em outro dia.'
+    :'';
+}
+
+document.querySelectorAll('.aba').forEach(b=>b.addEventListener('click',()=>mostrarAba(b.dataset.aba)));
+$('histCarta').addEventListener('change',renderHistorico);
 
 /* ---------- Inicialização ---------- */
 cartas=agrupar(DADOS.map(normalizar));
@@ -390,7 +528,7 @@ $('btnPrecos').addEventListener('click',atualizarPrecos);
 $('grid').addEventListener('click',e=>{
   if(e.target.id==='mais'){ limite+=PAGINA; render(false); }
 });
-['busca','cor','tipo','formato','ed','ordem','cambio'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>render(true))));
+['busca','cor','tipo','formato','raridade','ed','ordem','cambio'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>render(true))));
 </script>
 </body>
 </html>
