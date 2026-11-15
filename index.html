@@ -84,6 +84,37 @@ button{cursor:pointer}
 .legenda{display:flex;gap:16px;color:var(--mut);font-size:12px;margin-top:8px}
 .legenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
 .aviso-h{color:var(--mut);font-size:13px;margin:0}
+.decks{display:grid;grid-template-columns:260px 1fr;gap:18px;padding:18px 24px 48px;align-items:start}
+@media(max-width:800px){.decks{grid-template-columns:1fr}}
+.deck-topo{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.deck-item{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;color:var(--txt)}
+.deck-item.ativo{border-color:var(--acc)}
+.deck-item small{display:block;color:var(--mut);font-size:11px;margin-top:3px}
+.deck-editor{display:grid;gap:14px;min-width:0}
+.deck-cartas{display:grid;gap:8px}
+.deck-linha{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.dl-info{flex:1;min-width:0}
+.dl-info small{display:block;color:var(--mut);font-size:12px;margin-top:3px}
+.tenho{color:#6fd08c}
+.falta{color:#e5a13b}
+.dl-qtd{display:flex;align-items:center;gap:6px}
+.dl-qtd button,.x{width:30px;height:30px;padding:0;border-radius:8px}
+.importar summary{cursor:pointer;color:var(--mut);margin-bottom:8px}
+.importar textarea{width:100%;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit}
+.importar .pri{margin-top:8px}
+.exportar{display:flex;gap:8px;flex-wrap:wrap}
+.perigo{color:#e5573b}
+.metrica.alerta{border-color:#e5573b}
+.metrica.alerta b{color:#e5573b}
+.analise{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.painel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.painel h3{margin:0 0 4px;font-size:14px}
+.painel .nota{color:var(--mut);font-size:12px;margin:0 0 10px}
+.bar-row{display:grid;grid-template-columns:70px 1fr 56px;gap:8px;align-items:center;font-size:12px;margin:6px 0}
+.bar-track{background:#262b3a;border-radius:6px;height:14px;overflow:hidden}
+.bar-fill{height:100%;background:var(--acc);border-radius:6px}
+.bar-val{color:var(--mut);text-align:right}
+.resumo-odds{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -111,6 +142,7 @@ button{cursor:pointer}
 <nav class="abas">
   <button class="aba ativo" data-aba="colecao">Coleção</button>
   <button class="aba" data-aba="historico">Histórico de preço</button>
+  <button class="aba" data-aba="decks">Decklists</button>
 </nav>
 
 <main id="aba-colecao">
@@ -182,6 +214,42 @@ button{cursor:pointer}
   <div class="metricas" id="histResumo"></div>
   <div class="grafico" id="histGrafico"></div>
   <p class="aviso-h" id="histMsg"></p>
+</section>
+
+<section id="aba-decks" class="decks" hidden>
+  <aside>
+    <div class="deck-topo"><span class="rotulo">Meus decks</span><button id="btnNovoDeck" class="pri">Novo deck</button></div>
+    <div id="decksLista"></div>
+  </aside>
+  <div class="deck-editor" id="deckEditor" hidden>
+    <div class="linha">
+      <div class="grupo"><span class="rotulo">Nome</span><input type="text" id="deckNome"></div>
+      <div class="grupo"><span class="rotulo">Formato</span>
+        <select id="deckFormato"><option value="vintage">Value Vintage</option><option value="premodern">Premodern</option></select></div>
+      <button id="btnExcluirDeck" class="perigo">Excluir deck</button>
+    </div>
+    <div class="linha">
+      <div class="busca"><input type="text" id="deckBusca" list="sugestoes" placeholder="Buscar carta pelo nome"></div>
+      <div class="grupo"><span class="rotulo">Qtd</span><input type="number" id="deckQtd" value="1" min="1" style="width:80px"></div>
+      <button id="btnAdicionar" class="pri">Adicionar</button>
+    </div>
+    <datalist id="sugestoes"></datalist>
+    <details class="importar">
+      <summary>Importar lista (uma carta por linha, ex.: 4 Lightning Bolt)</summary>
+      <textarea id="deckImport" rows="6" placeholder="4 Lightning Bolt&#10;2 Mox Pearl"></textarea>
+      <button id="btnImportar" class="pri">Importar</button>
+    </details>
+    <div class="metricas" id="deckResumo" style="padding:0"></div>
+    <div class="exportar">
+      <button id="btnCopiarFaltantes">Copiar faltantes</button>
+      <button id="btnCopiarTudo">Copiar deck</button>
+      <button id="btnBaixar">Baixar .txt</button>
+      <button id="btnAtualizarDados">Atualizar dados das cartas</button>
+    </div>
+    <div class="analise" id="deckAnalise"></div>
+    <div class="deck-cartas" id="deckCartas"></div>
+    <p class="aviso-h" id="deckMsg"></p>
+  </div>
 </section>
 
 <script>
@@ -434,7 +502,9 @@ function mostrarAba(nome){
   document.querySelectorAll('.aba').forEach(b=>b.classList.toggle('ativo',b.dataset.aba===nome));
   $('aba-colecao').hidden=nome!=='colecao';
   $('aba-historico').hidden=nome!=='historico';
+  $('aba-decks').hidden=nome!=='decks';
   if(nome==='historico') renderHistorico();
+  if(nome==='decks') mostrarAbaDecks();
 }
 
 function opcoesHistorico(){
@@ -496,6 +566,325 @@ function renderHistorico(){
 
 document.querySelectorAll('.aba').forEach(b=>b.addEventListener('click',()=>mostrarAba(b.dataset.aba)));
 $('histCarta').addEventListener('change',renderHistorico);
+
+/* ---------- Decklists (guardadas no navegador) ---------- */
+const CHAVE_DECKS='mtg-decks';
+const FORMATOS={
+  vintage:{nome:'Value Vintage',ok:l=>['legal','restricted'].includes(l.vintage),tetoUSD:30},
+  premodern:{nome:'Premodern',ok:l=>l.premodern==='legal',tetoUSD:null}
+};
+const lerDecks=()=>{ try{return JSON.parse(localStorage.getItem(CHAVE_DECKS)||'{}');}catch(e){return {};} };
+let decks=lerDecks(), deckId=null;
+const salvarDecks=()=>localStorage.setItem(CHAVE_DECKS,JSON.stringify(decks));
+const deckAtual=()=>deckId&&decks[deckId];
+const pausa=ms=>new Promise(s=>setTimeout(s,ms));
+
+// quantas cópias de cada carta (pelo nome em inglês) existem no estoque
+function possuidas(){
+  const m={};
+  for(const c of cartas){ const k=c.en.toLowerCase(); m[k]=(m[k]||0)+c.qtd; }
+  return m;
+}
+function situacao(card,owned){
+  const tem=owned[card.nome.toLowerCase()]||0;
+  return {tem,falta:Math.max(0,card.qtd-tem)};
+}
+
+async function buscarCartaScry(nome){
+  const urls=[
+    `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(nome)}`,
+    `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(nome)}`
+  ];
+  for(const u of urls){
+    try{
+      const r=await fetch(u);
+      if(r.ok){
+        const d=await r.json();
+        const face=d.card_faces?.[0]||{};
+        return {nome:d.name,legal:d.legalities||{},usd:parseFloat(d.prices?.usd)||null,
+          mv:d.cmc??0,tipo:face.type_line||d.type_line||'',custo:face.mana_cost||d.mana_cost||''};
+      }
+    }catch(e){ /* tenta a próxima */ }
+  }
+  return null;
+}
+
+async function adicionarCartas(lista){
+  const d=deckAtual(); if(!d) return;
+  const naoEncontradas=[];
+  for(let i=0;i<lista.length;i++){
+    const {nome,qtd}=lista[i];
+    $('deckMsg').textContent=`Buscando ${i+1} de ${lista.length}: ${nome}`;
+    const info=await buscarCartaScry(nome);
+    await pausa(110);
+    if(!info){ naoEncontradas.push(nome); continue; }
+    const ex=d.cartas.find(c=>c.nome.toLowerCase()===info.nome.toLowerCase());
+    if(ex){ Object.assign(ex,{qtd:ex.qtd+qtd},info); }
+    else d.cartas.push({qtd,...info});
+    salvarDecks(); renderDeck();
+  }
+  $('deckMsg').textContent=naoEncontradas.length
+    ?`Não encontrei: ${naoEncontradas.join(', ')}`
+    :'Pronto.';
+}
+
+// aceita "4 Lightning Bolt", "4x Lightning Bolt" ou só "Lightning Bolt"; ignora o sideboard
+function parseLista(texto){
+  const itens=[];let principal=true;
+  for(const linha0 of texto.split(/\r?\n/)){
+    const l=linha0.trim();
+    if(!l||l.startsWith('//')) continue;
+    if(/^sideboard/i.test(l)){ principal=false; continue; }
+    if(!principal) continue;
+    const m=l.match(/^(\d+)\s*x?\s+(.+)$/i);
+    itens.push(m?{qtd:parseInt(m[1]),nome:m[2].trim()}:{qtd:1,nome:l});
+  }
+  return itens;
+}
+
+function textoDeck(soFaltantes){
+  const d=deckAtual(); if(!d) return '';
+  const owned=possuidas();
+  return d.cartas.map(c=>{
+    const q=soFaltantes?situacao(c,owned).falta:c.qtd;
+    return q>0?`${q} ${c.nome}`:null;
+  }).filter(Boolean).join('\n');
+}
+
+async function copiar(texto){
+  if(!texto){ $('deckMsg').textContent='Nada para copiar.'; return; }
+  try{
+    await navigator.clipboard.writeText(texto);
+    $('deckMsg').textContent='Copiado. Cole na lista de compra da Liga Magic.';
+  }catch(e){
+    $('deckMsg').textContent='Não consegui copiar. Use "Baixar .txt".';
+  }
+}
+function baixar(texto,nome){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([texto],{type:'text/plain;charset=utf-8'}));
+  a.download=nome;
+  a.click();
+}
+
+function renderDecks(){
+  const ids=Object.keys(decks);
+  $('decksLista').innerHTML=ids.length
+    ?ids.map(id=>{
+        const d=decks[id], n=d.cartas.reduce((s,c)=>s+c.qtd,0);
+        return `<button class="deck-item ${id===deckId?'ativo':''}" data-id="${esc(id)}">${esc(d.nome)}<small>${esc(FORMATOS[d.formato]?.nome||'')} · ${n} cartas</small></button>`;
+      }).join('')
+    :'<p class="aviso-h">Nenhum deck ainda.</p>';
+  renderDeck();
+}
+
+function renderDeck(){
+  const d=deckAtual();
+  $('deckEditor').hidden=!d;
+  if(!d) return;
+  $('deckNome').value=d.nome;
+  $('deckFormato').value=d.formato;
+  const f=FORMATOS[d.formato];
+  const owned=possuidas();
+  let total=0, faltaCusto=0, faltaCartas=0, totalCartas=0;
+  const linhas=d.cartas.map((c,i)=>{
+    const {tem,falta}=situacao(c,owned);
+    totalCartas+=c.qtd; faltaCartas+=falta;
+    total+=(c.usd||0)*c.qtd; faltaCusto+=(c.usd||0)*falta;
+    const legalidadeConhecida=c.legal&&Object.keys(c.legal).length>0;
+    const naoLegal=legalidadeConhecida&&!f.ok(c.legal);
+    return `<div class="deck-linha">
+      <div class="dl-info"><b>${esc(c.nome)}</b>
+        <small>${falta===0?'<span class="tenho">Tenho</span>':`<span class="falta">Faltam ${falta}</span>`} · possui ${tem}${naoLegal?' · <span class="falta">não legal neste formato</span>':''}</small>
+      </div>
+      <div class="dl-qtd">
+        <button data-act="menos" data-i="${i}">−</button><span>${c.qtd}</span><button data-act="mais" data-i="${i}">+</button>
+      </div>
+      <button class="x" data-act="remover" data-i="${i}" title="Remover">×</button>
+    </div>`;
+  }).join('');
+  renderAnalise(d);
+  $('deckCartas').innerHTML=linhas||'<p class="aviso-h">Adicione cartas pela busca ou importe uma lista.</p>';
+  const acima=f.tetoUSD&&total>f.tetoUSD;
+  $('deckResumo').innerHTML=`
+    <div class="metrica"><span>Cartas</span><b>${totalCartas}</b></div>
+    <div class="metrica"><span>Faltando</span><b>${faltaCartas}</b></div>
+    <div class="metrica destaque"><span>Custo para completar</span><b>${brl(faltaCusto*cambio())}</b></div>
+    <div class="metrica ${acima?'alerta':''}"><span>Total do deck${f.tetoUSD?` (teto US$ ${f.tetoUSD})`:''}</span><b>${brl(total*cambio())}</b></div>`;
+}
+
+function mostrarAbaDecks(){ renderDecks(); }
+
+$('decksLista').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-id]');
+  if(b){ deckId=b.dataset.id; renderDecks(); }
+});
+$('btnNovoDeck').addEventListener('click',()=>{
+  const nome=prompt('Nome do deck:','Novo deck');
+  if(!nome||!nome.trim()) return;
+  const id=Date.now().toString(36);
+  decks[id]={id,nome:nome.trim(),formato:'vintage',cartas:[]};
+  deckId=id; salvarDecks(); renderDecks();
+});
+$('btnExcluirDeck').addEventListener('click',()=>{
+  const d=deckAtual(); if(!d||!confirm(`Excluir "${d.nome}"?`)) return;
+  delete decks[deckId]; deckId=null; salvarDecks(); renderDecks();
+});
+$('deckNome').addEventListener('change',e=>{
+  const d=deckAtual(); if(!d) return;
+  d.nome=e.target.value.trim()||d.nome; salvarDecks(); renderDecks();
+});
+$('deckFormato').addEventListener('change',e=>{
+  const d=deckAtual(); if(!d) return;
+  d.formato=e.target.value; salvarDecks(); renderDecks();
+});
+
+let tAuto;
+$('deckBusca').addEventListener('input',()=>{
+  clearTimeout(tAuto);
+  const q=$('deckBusca').value.trim();
+  if(q.length<3) return;
+  tAuto=setTimeout(async()=>{
+    try{
+      const r=await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(q)}`);
+      const j=await r.json();
+      $('sugestoes').innerHTML=(j.data||[]).slice(0,12).map(n=>`<option value="${esc(n)}">`).join('');
+    }catch(e){ /* sem sugestões */ }
+  },300);
+});
+$('btnAdicionar').addEventListener('click',()=>{
+  const nome=$('deckBusca').value.trim();
+  const qtd=parseInt($('deckQtd').value)||1;
+  if(!nome||!deckAtual()) return;
+  $('deckBusca').value='';
+  adicionarCartas([{nome,qtd}]);
+});
+$('btnImportar').addEventListener('click',()=>{
+  if(!deckAtual()) return;
+  const lista=parseLista($('deckImport').value);
+  if(!lista.length) return;
+  $('deckImport').value='';
+  adicionarCartas(lista);
+});
+$('deckCartas').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-act]'); if(!b) return;
+  const d=deckAtual(), i=+b.dataset.i, c=d.cartas[i];
+  if(b.dataset.act==='mais') c.qtd++;
+  if(b.dataset.act==='menos'){ c.qtd--; if(c.qtd<=0) d.cartas.splice(i,1); }
+  if(b.dataset.act==='remover') d.cartas.splice(i,1);
+  salvarDecks(); renderDeck();
+});
+$('btnCopiarFaltantes').addEventListener('click',()=>copiar(textoDeck(true)));
+$('btnCopiarTudo').addEventListener('click',()=>copiar(textoDeck(false)));
+$('btnBaixar').addEventListener('click',()=>{
+  const d=deckAtual(); if(!d) return;
+  baixar(textoDeck(false), `${d.nome}.txt`);
+});
+
+/* ---------- Análise do deck ---------- */
+const COR_NOME={W:'Branco',U:'Azul',B:'Preto',R:'Vermelho',G:'Verde'};
+const COR_HEX={W:'#f8f6d8',U:'#4fa3e0',B:'#6b6b6b',R:'#e5573b',G:'#3fa35b'};
+
+// conta símbolos de cor no custo; híbrido {W/U} conta para as duas cores, Phyrexian {W/P} conta como W
+function pipsDe(custo){
+  const cnt={W:0,U:0,B:0,R:0,G:0};
+  for(const m of (custo||'').matchAll(/\{([^}]+)\}/g)){
+    for(const parte of m[1].split('/')){
+      const s=parte.replace(/[^WUBRG]/g,'');
+      if(s.length===1) cnt[s]++;
+    }
+  }
+  return cnt;
+}
+
+// combinações C(n,k), para a distribuição hipergeométrica
+function comb(n,k){
+  if(k<0||k>n) return 0;
+  let r=1;
+  for(let i=1;i<=k;i++) r=r*(n-k+i)/i;
+  return r;
+}
+
+function barra(rotulo,valor,max,texto,cor){
+  const w=max?valor/max*100:0;
+  return `<div class="bar-row"><span>${rotulo}</span><div class="bar-track"><div class="bar-fill" style="width:${w.toFixed(1)}%;${cor?`background:${cor}`:''}"></div></div><span class="bar-val">${texto}</span></div>`;
+}
+
+function renderAnalise(d){
+  const ehTerreno=c=>/Land/.test(c.tipo||'');
+  const naoTerrenos=d.cartas.filter(c=>!ehTerreno(c));
+  const semDados=d.cartas.some(c=>c.mv===undefined);
+
+  // curva de mana (não-terrenos)
+  const bal=[0,0,0,0,0,0,0];
+  let soma=0, n=0;
+  for(const c of naoTerrenos){
+    if(c.mv===undefined) continue;
+    bal[Math.min(6,Math.floor(c.mv))]+=c.qtd;
+    soma+=c.mv*c.qtd; n+=c.qtd;
+  }
+  const maxB=Math.max(1,...bal);
+  const curva=bal.map((q,i)=>barra(i===6?'6+':String(i),q,maxB,String(q))).join('');
+  const media=n?(soma/n).toFixed(2).replace('.',','):'—';
+
+  // cores
+  const pips={W:0,U:0,B:0,R:0,G:0};
+  for(const c of d.cartas){
+    const p=pipsDe(c.custo);
+    for(const k in p) pips[k]+=p[k]*c.qtd;
+  }
+  const totalPips=Object.values(pips).reduce((s,v)=>s+v,0);
+  const maxP=Math.max(1,...Object.values(pips));
+  const cores=['W','U','B','R','G'].map(k=>barra(COR_NOME[k],pips[k],maxP,
+    totalPips?Math.round(pips[k]/totalPips*100)+'%':'—',COR_HEX[k])).join('');
+
+  // terrenos na mão (primeiro a jogar: 7 cartas + 1 compra por turno a partir do turno 2)
+  const N=d.cartas.reduce((s,c)=>s+c.qtd,0);
+  const L=d.cartas.filter(ehTerreno).reduce((s,c)=>s+c.qtd,0);
+  const semTerreno=k=>N>=k?comb(N-L,k)/comb(N,k):0;
+  const peloMenosUm=k=>1-semTerreno(k);
+  const pct=x=>(x*100).toFixed(1).replace('.',',')+'%';
+  const dist=[0,1,2,3,4,5,6,7].map(k=>N>=7?comb(L,k)*comb(N-L,7-k)/comb(N,7):0);
+  const maxD=Math.max(...dist,1e-9);
+  const maos=dist.map((p,k)=>barra(String(k),p,maxD,pct(p))).join('');
+
+  $('deckAnalise').innerHTML=`
+    <div class="painel">
+      <h3>Curva de mana</h3>
+      <p class="nota">Cartas que não são terrenos, por custo de mana. Média: ${media}${semDados?' · atualize os dados das cartas':''}</p>
+      ${curva}
+    </div>
+    <div class="painel">
+      <h3>Distribuição de cores</h3>
+      <p class="nota">Símbolos de cor nos custos do deck</p>
+      ${cores}
+    </div>
+    <div class="painel">
+      <h3>Chance de terreno na mão</h3>
+      <p class="nota">Primeiro a jogar, com ${L} terrenos em ${N} cartas</p>
+      <div class="resumo-odds">
+        <span>Mão inicial: <b>${pct(peloMenosUm(7))}</b></span>
+        <span>Até o turno 2: <b>${pct(peloMenosUm(8))}</b></span>
+        <span>Até o turno 3: <b>${pct(peloMenosUm(9))}</b></span>
+      </div>
+      <p class="nota">Quantos terrenos há na mão inicial</p>
+      ${maos}
+    </div>`;
+}
+
+async function atualizarDadosDeck(){
+  const d=deckAtual(); if(!d) return;
+  for(let i=0;i<d.cartas.length;i++){
+    const c=d.cartas[i];
+    $('deckMsg').textContent=`Atualizando ${i+1} de ${d.cartas.length}: ${c.nome}`;
+    const info=await buscarCartaScry(c.nome);
+    await pausa(110);
+    if(info) Object.assign(c,info);
+  }
+  salvarDecks(); renderDeck();
+  $('deckMsg').textContent='Dados atualizados.';
+}
+$('btnAtualizarDados').addEventListener('click',atualizarDadosDeck);
 
 /* ---------- Inicialização ---------- */
 cartas=agrupar(DADOS.map(normalizar));
