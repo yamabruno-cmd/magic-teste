@@ -26,6 +26,12 @@ button{cursor:pointer}
 .brand h1{font-size:18px;margin:0;letter-spacing:.2px}
 .brand small{color:var(--mut);font-size:12px}
 .acoes{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cor-header{display:flex;align-items:center}
+.acoes-filtro{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto}
+.linha.acima{justify-content:flex-end}
+.cor-header .rotulo{display:none}
+.cor-header .chips{gap:6px}
+.cor-header .chip{width:28px;height:28px;font-size:11px}
 .cambio{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:13px}
 .cambio input{width:72px;text-align:center}
 
@@ -73,13 +79,29 @@ button{cursor:pointer}
     <div class="logo">M</div>
     <div><h1>Coleção Magic</h1><small>Estoque Yamamoto</small></div>
   </div>
-  <div class="acoes">
-    <label class="cambio">USD → BRL <input type="text" id="cambio" value="5.50"></label>
-    <button id="btnPrecos" class="pri">Atualizar preços</button>
+  <div class="cor-header">
+    <div class="grupo"><span class="rotulo">Cor</span>
+      <div class="chips" id="chips">
+        <button class="chip todas ativo" data-v="" title="Todas">T</button>
+        <button class="chip" data-v="W" style="background:#f8f6d8">W</button>
+        <button class="chip" data-v="U" style="background:#4fa3e0">U</button>
+        <button class="chip" data-v="B" style="background:#6b6b6b;color:#fff">B</button>
+        <button class="chip" data-v="R" style="background:#e5573b;color:#fff">R</button>
+        <button class="chip" data-v="G" style="background:#3fa35b;color:#fff">G</button>
+        <button class="chip" data-v="M" style="background:linear-gradient(135deg,#f8f6d8,#4fa3e0,#e5573b,#3fa35b)">M</button>
+        <button class="chip" data-v="C" style="background:#aaa">C</button>
+      </div></div>
   </div>
+
 </header>
 
 <section class="toolbar">
+  <div class="linha acima">
+    <div class="acoes-filtro">
+      <label class="cambio">USD → BRL <input type="text" id="cambio" value="5.50"></label>
+      <button id="btnPrecos" class="pri">Atualizar preços</button>
+    </div>
+  </div>
   <div class="linha">
     <div class="busca"><input type="text" id="busca" placeholder="Buscar por nome em português ou inglês"></div>
     <div class="grupo"><span class="rotulo">Edição</span>
@@ -94,17 +116,6 @@ button{cursor:pointer}
       </select></div>
   </div>
   <div class="linha">
-    <div class="grupo"><span class="rotulo">Cor</span>
-      <div class="chips" id="chips">
-        <button class="chip todas ativo" data-v="">Todas</button>
-        <button class="chip" data-v="W" style="background:#f8f6d8">W</button>
-        <button class="chip" data-v="U" style="background:#4fa3e0">U</button>
-        <button class="chip" data-v="B" style="background:#6b6b6b;color:#fff">B</button>
-        <button class="chip" data-v="R" style="background:#e5573b;color:#fff">R</button>
-        <button class="chip" data-v="G" style="background:#3fa35b;color:#fff">G</button>
-        <button class="chip" data-v="M" style="background:linear-gradient(135deg,#f8f6d8,#4fa3e0,#e5573b,#3fa35b)">M</button>
-        <button class="chip" data-v="C" style="background:#aaa">C</button>
-      </div></div>
     <div class="grupo"><span class="rotulo">Tipo</span>
       <select id="tipo">
         <option value="">Todos</option>
