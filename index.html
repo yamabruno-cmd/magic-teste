@@ -243,30 +243,36 @@ button{cursor:pointer}
       <button id="btnExcluirDeck" class="perigo">Excluir deck</button>
     </div>
     <div class="linha">
+      <div class="grupo"><span class="rotulo">Nome</span><input type="text" id="deckNome"></div>
+      <div class="grupo"><span class="rotulo">Formato</span>
+        <select id="deckFormato"><option value="vintage">Value Vintage</option><option value="premodern">Premodern</option></select></div>
+      <button id="btnExcluirDeck" class="perigo">Excluir deck</button>
+    </div>
+    <div class="linha">
       <div class="busca"><input type="text" id="deckBusca" list="sugestoes" placeholder="Buscar carta pelo nome"></div>
       <div class="grupo"><span class="rotulo">Qtd</span><input type="number" id="deckQtd" value="1" min="1" style="width:80px"></div>
       <button id="btnAdicionar" class="pri">Adicionar</button>
     </div>
     <datalist id="sugestoes"></datalist>
-    <details class="importar">
-      <summary>Importar lista (uma carta por linha, ex.: 4 Lightning Bolt)</summary>
-      <textarea id="deckImport" rows="6" placeholder="4 Lightning Bolt&#10;2 Mox Pearl"></textarea>
-      <button id="btnImportar" class="pri">Importar</button>
-    </details>
-    <div class="metricas" id="deckResumo" style="padding:0"></div>
-    <div class="exportar">
-      <button id="btnCopiarFaltantes">Copiar faltantes</button>
-      <button id="btnCopiarTudo">Copiar deck</button>
-      <button id="btnBaixar">Baixar .txt</button>
-      <button id="btnAtualizarDados">Atualizar dados das cartas</button>
-    </div>
-    <div class="analise" id="deckAnalise"></div>
     <div class="visao" id="visao">
       <button class="ativo" data-v="lista">Lista</button>
       <button data-v="galeria">Galeria</button>
     </div>
     <div class="deck-cartas" id="deckCartas"></div>
     <p class="aviso-h" id="deckMsg"></p>
+    <div class="metricas" id="deckResumo" style="padding:0"></div>
+    <div class="analise" id="deckAnalise"></div>
+    <div class="exportar">
+      <button id="btnCopiarFaltantes">Copiar faltantes</button>
+      <button id="btnCopiarTudo">Copiar deck</button>
+      <button id="btnBaixar">Baixar .txt</button>
+      <button id="btnAtualizarDados">Atualizar dados das cartas</button>
+    </div>
+    <details class="importar">
+      <summary>Importar lista (uma carta por linha, ex.: 4 Lightning Bolt)</summary>
+      <textarea id="deckImport" rows="6" placeholder="4 Lightning Bolt&#10;2 Mox Pearl"></textarea>
+      <button id="btnImportar" class="pri">Importar</button>
+    </details>
   </div>
 </section>
 
