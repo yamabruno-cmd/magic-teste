@@ -234,6 +234,8 @@ input[type=text]{min-width:0}
   .hist{padding:18px 24px 48px}
   .hist-controles select{width:auto;min-width:320px}
 }
+.c{cursor:pointer}
+.c.sel-on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
 </style>
 </head>
 <body>
@@ -557,10 +559,9 @@ function cartaHTML(c){
     ?cs.map(x=>`<span class="dot" style="background:${COR[x]}"></span>`).join('')
     :(c.scry?'<span class="dot" style="background:#aaa"></span>':'');
   const u=precoBRL(c);
-  return `<div class="c">
+  return `<div class="c${selecionadas.has(chave(c))?' sel-on':''}" data-sel="${esc(chave(c))}">
     <span class="qtd">×${c.qtd}</span>
     ${isFoil(c)?'<span class="badge">FOIL</span>':''}
-    <button class="sel ${selecionadas.has(chave(c))?'on':''}" data-sel="${esc(chave(c))}" aria-label="Selecionar para o histórico">✓</button>
     <img loading="lazy" decoding="async" src="${esc(urlImagem(c))}" alt="${esc(c.en)}">
     <div class="info">
       <div class="pt">${esc(c.pt)}</div>
@@ -686,9 +687,18 @@ function grafico(pontos){
     return `<line x1="${pad.l}" x2="${W-pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2f3f"/>`+
       `<text x="${pad.l-8}" y="${y(v)+4}" text-anchor="end" fill="#8a90a2" font-size="11">${brl(v)}</text>`;
   }).join('');
-  const fmt=t=>new Date(t).toLocaleDateString('pt-BR');
-  const datas=`<text x="${pad.l}" y="${H-10}" fill="#8a90a2" font-size="11">${fmt(t0)}</text>`+
-    `<text x="${W-pad.r}" y="${H-10}" text-anchor="end" fill="#8a90a2" font-size="11">${fmt(t1)}</text>`;
+  const fmt=t=>new Date(t).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  // marcas de data distribuídas proporcionalmente ao tempo (linha de tempo)
+  const nTicks=Math.min(5,new Set(pontos.map(p=>p.d)).size);
+  const marcas=[];
+  for(let i=0;i<Math.max(nTicks,1);i++){
+    const tt=nTicks<=1?t0:t0+(t1-t0)*i/(nTicks-1);
+    const xx=x(tt).toFixed(1);
+    const ancora=nTicks<=1?'middle':i===0?'start':i===nTicks-1?'end':'middle';
+    marcas.push(`<line x1="${xx}" x2="${xx}" y1="${pad.t}" y2="${H-pad.b}" stroke="#2a2f3f" stroke-dasharray="2 4"/>`+
+      `<text x="${xx}" y="${H-8}" text-anchor="${ancora}" fill="#8a90a2" font-size="10">${fmt(tt)}</text>`);
+  }
+  const datas=marcas.join('');
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img">${eixo}${linha('usd','#c9a227')}${linha('foil','#c48bff')}${datas}</svg>
     <div class="legenda"><span><i style="background:#c9a227"></i>Normal</span><span><i style="background:#c48bff"></i>Foil</span></div>`;
 }
