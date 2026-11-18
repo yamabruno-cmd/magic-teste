@@ -171,6 +171,69 @@ button{cursor:pointer}
 .modal .importar textarea{font-size:12px}
 .modal .aviso-h{font-size:12px}
 .modal .tile-botoes button{width:26px;height:24px;padding:0}
+/* ---- Coleção: layout minimalista, pensado para celular ---- */
+.topbar{padding:10px 14px;gap:10px}
+.logo{width:30px;height:30px;font-size:15px;border-radius:9px}
+.brand h1{font-size:15px}
+.brand small{display:none}
+.cor-header{width:100%;overflow-x:auto;padding-bottom:2px}
+.cor-header .chips{flex-wrap:nowrap}
+.cor-header .chip{width:26px;height:26px;font-size:10px}
+.acoes-filtro{gap:6px;margin-left:0}
+.cambio{font-size:11px}
+.toolbar{padding:10px 14px 4px;gap:8px}
+.linha{gap:8px}
+.linha .grupo{flex:1;min-width:140px}
+.busca{min-width:100%}
+.rotulo{font-size:9px;letter-spacing:.6px}
+.metricas{padding:8px 14px 2px;grid-template-columns:repeat(4,1fr);gap:6px}
+.metrica{padding:8px 10px;border-radius:10px}
+.metrica span{font-size:9px;letter-spacing:.3px}
+.metrica b{font-size:13px;margin-top:2px}
+.aviso{padding:4px 14px;font-size:11px}
+#msg{padding:4px 14px;font-size:11px;min-height:0}
+.grid{padding:10px 14px 36px;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.c{border-radius:8px}
+.c:hover{transform:none}
+.info{padding:6px 7px;font-size:11px}
+.pt{font-size:12px;line-height:1.2}
+.en{display:none}
+.meta{font-size:10px;margin-top:3px;line-height:1.4}
+.preco{font-size:12px;margin-top:3px}
+.qtd,.badge{font-size:9px;padding:1px 5px;top:4px}
+.qtd{left:4px}.badge{right:4px}
+.mais{padding:8px 16px}
+button,input,select{font-size:13px;padding:7px 9px}
+input[type=text]{min-width:0}
+@media (max-width:640px){
+  .metricas{grid-template-columns:repeat(2,1fr)}
+  .linha .grupo{min-width:0}
+  .busca input{width:100%}
+  .cambio input{width:60px}
+}
+.sel{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:50%;border:2px solid #fff8;background:#0009;color:#fff;font-size:12px;display:grid;place-items:center;padding:0}
+.sel.on{background:var(--acc);border-color:var(--acc);color:#111}
+.selbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 14px 0;padding:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;font-size:12px}
+.selbar span{flex:1;min-width:140px}
+/* ---- Histórico: layout minimalista, pensado para celular ---- */
+.hist{padding:12px 14px 40px;gap:10px}
+.hist-controles{gap:8px}
+.hist-controles .grupo{width:100%}
+.hist-controles select{min-width:0;width:100%}
+.hist .rotulo{font-size:9px;letter-spacing:.6px}
+#histFiltro,#histMsg{font-size:11px;margin:0}
+#histResumo{padding:0;grid-template-columns:repeat(2,1fr);gap:6px}
+#histResumo .metrica{padding:8px 10px;border-radius:10px}
+#histResumo .metrica span{font-size:9px;letter-spacing:.3px}
+#histResumo .metrica b{font-size:14px;margin-top:2px}
+.grafico{padding:10px 8px 8px;border-radius:12px}
+.legenda{font-size:10px;margin-top:6px;gap:12px}
+.legenda i{width:8px;height:8px}
+@media (min-width:640px){
+  #histResumo{grid-template-columns:repeat(4,1fr)}
+  .hist{padding:18px 24px 48px}
+  .hist-controles select{width:auto;min-width:320px}
+}
 </style>
 </head>
 <body>
@@ -256,6 +319,11 @@ button{cursor:pointer}
   <input type="hidden" id="cor" value="">
 </section>
 
+<div class="selbar" id="selBarra" hidden>
+  <span id="selTexto"></span>
+  <button id="btnVerHist" class="pri">Ver histórico</button>
+  <button id="btnLimparSel">Limpar</button>
+</div>
 <section class="metricas" id="stats"></section>
 <div class="aviso" id="aviso"></div>
 <div id="msg"></div>
@@ -267,6 +335,7 @@ button{cursor:pointer}
     <div class="grupo"><span class="rotulo">Carta</span>
       <select id="histCarta"></select></div>
   </div>
+  <p class="aviso-h" id="histFiltro"></p>
   <div class="metricas" id="histResumo"></div>
   <div class="grafico" id="histGrafico"></div>
   <p class="aviso-h" id="histMsg"></p>
@@ -332,6 +401,9 @@ const COR={W:'#f8f6d8',U:'#4fa3e0',B:'#6b6b6b',R:'#e5573b',G:'#3fa35b'};
 const PAGINA=60;
 const CHAVE_CACHE='mtg-colecao-precos';
 let cartas=[], limite=PAGINA;
+let selecionadas=new Set();
+try{ selecionadas=new Set(JSON.parse(localStorage.getItem('mtg-selecao')||'[]')); }catch(e){}
+function salvarSelecao(){ localStorage.setItem('mtg-selecao',JSON.stringify([...selecionadas])); }
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -488,6 +560,7 @@ function cartaHTML(c){
   return `<div class="c">
     <span class="qtd">×${c.qtd}</span>
     ${isFoil(c)?'<span class="badge">FOIL</span>':''}
+    <button class="sel ${selecionadas.has(chave(c))?'on':''}" data-sel="${esc(chave(c))}" aria-label="Selecionar para o histórico">✓</button>
     <img loading="lazy" decoding="async" src="${esc(urlImagem(c))}" alt="${esc(c.en)}">
     <div class="info">
       <div class="pt">${esc(c.pt)}</div>
@@ -500,8 +573,14 @@ function cartaHTML(c){
   </div>`;
 }
 
+function atualizarSelBar(){
+  const n=selecionadas.size;
+  $('selBarra').hidden=!n;
+  $('selTexto').textContent=`${n} carta(s) selecionada(s)`;
+}
 function render(reset){
   if(reset) limite=PAGINA;
+  atualizarSelBar();
   const l=filtrados();
   const qtd=l.reduce((s,c)=>s+c.qtd,0);
   const mercado=l.reduce((s,c)=>s+(precoBRL(c)||0)*c.qtd,0);
@@ -581,14 +660,15 @@ function mostrarAba(nome){
 
 function opcoesHistorico(){
   const sel=$('histCarta'), atual=sel.value;
-  const lista=[...cartas].sort((a,b)=>a.pt.localeCompare(b.pt,'pt'));
+  const base=selecionadas.size?cartas.filter(c=>selecionadas.has(chave(c))):cartas;
+  const lista=[...base].sort((a,b)=>a.pt.localeCompare(b.pt,'pt'));
   sel.innerHTML=lista.map(c=>`<option value="${esc(chave(c))}">${esc(c.pt)} · ${esc(c.edicao)}</option>`).join('');
   if(atual&&lista.some(c=>chave(c)===atual)) sel.value=atual;
 }
 
 function grafico(pontos){
   if(!pontos.length) return '<p class="aviso-h">Ainda não há registros para esta carta. Clique em "Atualizar preços" para começar.</p>';
-  const W=800,H=300,pad={l:64,r:20,t:20,b:36};
+  const W=360,H=220,pad={l:52,r:12,t:14,b:28};
   const t0=Math.min(...pontos.map(p=>dt(p.d))), t1=Math.max(...pontos.map(p=>dt(p.d)));
   const valores=pontos.flatMap(p=>[p.usd!=null?p.usd*p.cambio:null,p.foil!=null?p.foil*p.cambio:null]).filter(v=>v!=null);
   const vmax=(Math.max(...valores)*1.1)||1;
@@ -615,6 +695,9 @@ function grafico(pontos){
 
 function renderHistorico(){
   opcoesHistorico();
+  $('histFiltro').textContent=selecionadas.size
+    ?`Filtrado pelas ${selecionadas.size} carta(s) selecionadas na Coleção.`
+    :'Mostrando todas as cartas. Selecione cartas na Coleção para filtrar.';
   const k=$('histCarta').value;
   const pts=(lerHistorico()[k]||[]).slice().sort((a,b)=>a.d.localeCompare(b.d));
   $('histGrafico').innerHTML=grafico(pts);
@@ -668,15 +751,19 @@ async function buscarCartaScry(nome){
     `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(nome)}`
   ];
   for(const u of urls){
-    try{
-      const r=await fetch(u);
-      if(r.ok){
-        const d=await r.json();
-        const face=d.card_faces?.[0]||{};
-        return {nome:d.name,legal:d.legalities||{},usd:parseFloat(d.prices?.usd)||null,
-          mv:d.cmc??0,tipo:face.type_line||d.type_line||'',custo:face.mana_cost||d.mana_cost||''};
-      }
-    }catch(e){ /* tenta a próxima */ }
+    for(let k=0;k<3;k++){
+      try{
+        const r=await fetch(u);
+        if(r.ok){
+          const d=await r.json();
+          const face=d.card_faces?.[0]||{};
+          return {nome:d.name,legal:d.legalities||{},usd:parseFloat(d.prices?.usd)||null,
+            mv:d.cmc??0,tipo:face.type_line||d.type_line||'',custo:face.mana_cost||d.mana_cost||''};
+        }
+        if(r.status===429){ await pausa(1200); continue; }   // limite de requisições: espera e tenta de novo
+        break;                                              // não encontrada: tenta a próxima forma
+      }catch(e){ await pausa(600); }                         // falha de rede: tenta de novo
+    }
   }
   return null;
 }
@@ -696,20 +783,34 @@ async function adicionarCartas(lista){
     salvarDecks(); renderDeck();
   }
   $('deckMsg').textContent=naoEncontradas.length
-    ?`Não encontrei: ${naoEncontradas.join(', ')}`
-    :'Pronto.';
+    ?`Não encontrei ${naoEncontradas.length}: ${naoEncontradas.join(', ')}. Confira a grafia ou adicione pela busca.`
+    :'Importação concluída.';
 }
 
-// aceita "4 Lightning Bolt", "4x Lightning Bolt" ou só "Lightning Bolt"; ignora o sideboard
+// limpa o nome: remove "(SET) 123", "*F*", "#123" e ajusta cartas de duas faces ("A / B" -> "A // B")
+function limparNome(s){
+  return s
+    .replace(/\s*\*[^*]*\*\s*/g,' ')
+    .replace(/\s*\([A-Za-z0-9]{2,6}\)\s*[\w★\-]*\s*$/,'')
+    .replace(/\s+#\S+$/,'')
+    .replace(/\s+/g,' ')
+    .trim()
+    .replace(/\s*\/\/?\s*/g,' // ');
+}
+// linhas de título como "Creatures (12)", "Lands:" ou sem letras não são cartas
+const ehCabecalho=l=>/:$/.test(l)||/^[^\d]*\(\d+\)$/.test(l)||!/[A-Za-zÀ-ú]/.test(l);
+
+// aceita "4 Lightning Bolt", "4x Lightning Bolt", "4 Lightning Bolt (M11) 149" ou só o nome; ignora o sideboard
 function parseLista(texto){
   const itens=[];let principal=true;
   for(const linha0 of texto.split(/\r?\n/)){
     const l=linha0.trim();
     if(!l||l.startsWith('//')) continue;
     if(/^sideboard/i.test(l)){ principal=false; continue; }
-    if(!principal) continue;
+    if(!principal||ehCabecalho(l)) continue;
     const m=l.match(/^(\d+)\s*x?\s+(.+)$/i);
-    itens.push(m?{qtd:parseInt(m[1]),nome:m[2].trim()}:{qtd:1,nome:l});
+    const nome=limparNome(m?m[2]:l);
+    if(nome) itens.push({qtd:m?parseInt(m[1]):1,nome});
   }
   return itens;
 }
@@ -1020,6 +1121,14 @@ $('visao').addEventListener('click',e=>{
   renderDeck();
 });
 
+$('grid').addEventListener('click',e=>{
+  const s=e.target.closest('[data-sel]'); if(!s) return;
+  const k=s.dataset.sel;
+  selecionadas.has(k)?selecionadas.delete(k):selecionadas.add(k);
+  salvarSelecao(); render(false);
+});
+$('btnVerHist').addEventListener('click',()=>mostrarAba('historico'));
+$('btnLimparSel').addEventListener('click',()=>{ selecionadas.clear(); salvarSelecao(); render(false); });
 $('btnFecharDeck').addEventListener('click',fecharEditor);
 $('deckEditor').addEventListener('click',e=>{ if(e.target.id==='deckEditor') fecharEditor(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('deckEditor').hidden) fecharEditor(); });
